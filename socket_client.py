@@ -76,3 +76,4 @@ def listen(incoming_message_callback, error_callback):
         except Exception as e:
             # Any other exception - something happened, exit
             error_callback('Reading error: {}'.format(str(e)))
+
