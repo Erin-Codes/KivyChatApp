@@ -1,4 +1,6 @@
 import os
+import sys
+
 import kivy
 
 from kivy.app import App
@@ -7,6 +9,9 @@ from kivy.uix.gridlayout import GridLayout   # One of many layout structures
 from kivy.uix.textinput import TextInput     # Allow for ...text input.
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.clock import Clock
+
+import socket_client
 
 kivy.require("1.10.1")
 
@@ -69,6 +74,23 @@ class ConnectPage(GridLayout):
         chat_app.info_page.update_info(info)
         chat_app.screen_manager.current = 'Info'
 
+        Clock.schedule_once(self.connect, 1)
+
+    # Connects to server
+    # (second parameter is the time after which this function had been called
+    def connect(self, _):
+
+        port = int(self.port.text)
+        ip = self.ip.text
+        username = self.username.text
+
+        if not socket_client.connect(ip, port, username, show_error):
+            return
+
+        # Create chat page and activate it
+        chat_app.create_chat_page()
+        chat_app.screen_manager.current = 'Chat'
+
 
 class ChatApp(App):
     def build(self):
@@ -92,6 +114,22 @@ class ChatApp(App):
         self.screen_manager.add_widget(screen)
 
         return self.screen_manager
+
+        # We cannot create chat screen with other but screens, as it;s init method will start listening
+        # for incoming connections, but at this stage connection is not being made yet, so we
+        # call this method later
+    def create_chat_page(self):
+        self.chat_page = ChatPage()
+        screen = Screen(name="Chat")
+        screen.add_widget(self.chat_page)
+        self.screen_manager.add_widget(screen)
+
+
+class ChatPage(GridLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cols = 1
+        self.add_widget(Label(text='Coming SOon!!!!!!', font_size=32))
 
 class InfoPage(GridLayout):
     def __init__(self, **kwargs):
@@ -118,6 +156,15 @@ class InfoPage(GridLayout):
     # Called on Label width update, so we can set text width properly - to 90% of label width
     def update_text_width(self, *_):
         self.message.text_size = (self.message.width * 0.9, None)
+
+
+# Error callback function, used by sockets client
+# Updates info page with an error message, shows message and schedules exit in 10 seconds
+# time.sleep() won't work here - will block Kivy and page with error message won't show up
+def show_error(message):
+    chat_app.info_page.update_info(message)
+    chat_app.screen_manager.current = 'Info'
+    Clock.schedule_once(sys.exit, 10)
 
 if __name__ == "__main__":
     chat_app = ChatApp()

@@ -13,7 +13,7 @@ socket.SOCK_STREAM - TCP, conection-based, socket.SOCK_DGRAM - UDP,
 connectionless, datagrams, socket.SOCK_RAW - raw IP packets)
 '''
 
-server_socket = socket.socket(socket.AF.INET, socket.SOCK_STREAM)
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # SO_ - socket option
 # SOL_ - socket option level
